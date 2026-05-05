@@ -1,0 +1,41 @@
+/**
+ * Register & Login Page Styles
+ * Location: client/src/pages/Register.css (juga untuk Login.css)
+ * Copy file ini sebagai Login.css dengan nama class yang sesuai
+ */
+
+/* Register Page */
+.register-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.register-card {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+}
+
+.register-card h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+  font-size: 28px;
+}
+
+.register-card p {
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .register-card,
+  .login-card {
+    padding: 30px 20px;
+  }
+}
