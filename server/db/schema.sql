@@ -1,37 +1,43 @@
 -- ============================================================================
--- DATABASE SCHEMA
+-- DATABASE SCHEMA (PostgreSQL)
 -- ============================================================================
--- Schema untuk SQLite atau PostgreSQL
--- Akan diimplementasi sepenuhnya di task 2 (Setup Database & Skema)
+-- Schema untuk Supabase / PostgreSQL
+-- Dijalankan sekali untuk inisialisasi database
 
+-- ============================================================================
 -- USERS TABLE
+-- ============================================================================
 -- Menyimpan informasi user, public key, dan encrypted private key
 CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email TEXT UNIQUE NOT NULL,
-  hashed_password TEXT NOT NULL,
-  salt TEXT NOT NULL,
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  hashed_password VARCHAR(255) NOT NULL,
+  salt VARCHAR(255) NOT NULL,
   public_key TEXT NOT NULL,
   encrypted_private_key TEXT NOT NULL,
-  kdf_params TEXT,                    -- JSON metadata untuk KDF
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  kdf_params JSONB,                    -- JSON metadata untuk KDF
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ============================================================================
 -- MESSAGES TABLE
+-- ============================================================================
 -- Menyimpan pesan terenkripsi antara users
 CREATE TABLE IF NOT EXISTS messages (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  sender_email TEXT NOT NULL,
-  receiver_email TEXT NOT NULL,
+  id SERIAL PRIMARY KEY,
+  sender_email VARCHAR(255) NOT NULL,
+  receiver_email VARCHAR(255) NOT NULL,
   ciphertext TEXT NOT NULL,           -- AES-encrypted message
-  iv TEXT NOT NULL,                   -- Initialization vector untuk AES
-  mac TEXT,                           -- HMAC untuk bonus (optional)
-  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  iv VARCHAR(255) NOT NULL,           -- Initialization vector untuk AES
+  mac VARCHAR(255),                   -- HMAC untuk bonus (optional)
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- INDEX untuk query performance
+-- ============================================================================
+-- INDEXES untuk query performance
+-- ============================================================================
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_email);
 CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_email);

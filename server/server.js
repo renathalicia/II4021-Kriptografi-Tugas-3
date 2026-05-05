@@ -1,5 +1,9 @@
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
 require('dotenv').config();
 const app = require('./app');
+const { initializeDatabase, closeDatabase } = require('./db/db');
 
 // ============================================================================
 // SERVER CONFIGURATION
@@ -12,8 +16,13 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // START SERVER
 // ============================================================================
 
-const server = app.listen(PORT, () => {
-  console.log(`
+const start = async () => {
+  try {
+    // Initialize database connection
+    await initializeDatabase();
+
+    const server = app.listen(PORT, () => {
+      console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
 ║   🔐 Kriptografi Server — Encrypted Messaging System         ║
@@ -25,28 +34,35 @@ const server = app.listen(PORT, () => {
 ║   └─ Health Check: http://localhost:${String(PORT)}/health${' '.repeat(24)} ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
-  `);
-});
+      `);
+    });
 
-// ============================================================================
-// GRACEFUL SHUTDOWN
-// ============================================================================
+    // ============================================================================
+    // GRACEFUL SHUTDOWN
+    // ============================================================================
 
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    console.log('HTTP server closed');
-    process.exit(0);
-  });
-});
+    process.on('SIGTERM', async () => {
+      console.log('SIGTERM signal received: closing HTTP server');
+      server.close(async () => {
+        await closeDatabase();
+        console.log('HTTP server closed');
+        process.exit(0);
+      });
+    });
 
-process.on('SIGINT', () => {
-  console.log('SIGINT signal received: closing HTTP server');
-  server.close(() => {
-    console.log('HTTP server closed');
-    process.exit(0);
-  });
-});
+    process.on('SIGINT', async () => {
+      console.log('SIGINT signal received: closing HTTP server');
+      server.close(async () => {
+        await closeDatabase();
+        console.log('HTTP server closed');
+        process.exit(0);
+      });
+    });
+  } catch (error) {
+    console.error('[STARTUP ERROR]', error.message);
+    process.exit(1);
+  }
+};
 
 // ============================================================================
 // ERROR HANDLING
@@ -63,3 +79,6 @@ process.on('uncaughtException', (error) => {
   console.error('[UNCAUGHT EXCEPTION]', error);
   process.exit(1);
 });
+
+// Start the server
+start();
