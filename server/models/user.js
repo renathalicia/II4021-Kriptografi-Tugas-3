@@ -1,17 +1,34 @@
 // ============================================================================
 // USER MODEL
 // ============================================================================
-// Placeholder untuk query-query terkait user
-// Akan diimplementasi di task 5-6 (Endpoint Autentikasi & Users)
+// Query-query terkait user untuk PostgreSQL (Supabase)
+
+const { query, queryOne } = require('../db/db');
 
 /**
  * Create new user
  * @param {Object} userData - { email, hashed_password, salt, public_key, encrypted_private_key, kdf_params }
- * @returns {Promise<Object>} - Created user
+ * @returns {Promise<Object>} - Created user (email only)
  */
 async function createUser(userData) {
-  // TODO: INSERT INTO users VALUES (...)
-  throw new Error('createUser not implemented');
+  const { email, hashed_password, salt, public_key, encrypted_private_key, kdf_params } = userData;
+
+  const sql = `
+    INSERT INTO users (email, hashed_password, salt, public_key, encrypted_private_key, kdf_params)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id, email, created_at
+  `;
+
+  const rows = await query(sql, [
+    email,
+    hashed_password,
+    salt,
+    public_key,
+    encrypted_private_key,
+    JSON.stringify(kdf_params)
+  ]);
+
+  return rows[0];
 }
 
 /**
@@ -20,27 +37,28 @@ async function createUser(userData) {
  * @returns {Promise<Object|null>} - User object atau null jika tidak ditemukan
  */
 async function findUserByEmail(email) {
-  // TODO: SELECT * FROM users WHERE email = ?
-  throw new Error('findUserByEmail not implemented');
+  const sql = `SELECT * FROM users WHERE email = $1`;
+  return await queryOne(sql, [email]);
 }
 
 /**
  * Get all users (untuk contact list)
- * @returns {Promise<Array>} - List of all users
+ * @param {string} excludeEmail - Email to exclude (current user)
+ * @returns {Promise<Array>} - List of user emails
  */
-async function getAllUsers() {
-  // TODO: SELECT id, email, public_key FROM users
-  throw new Error('getAllUsers not implemented');
+async function getAllUsers(excludeEmail) {
+  const sql = `SELECT email FROM users WHERE email != $1 ORDER BY email ASC`;
+  return await query(sql, [excludeEmail]);
 }
 
 /**
  * Get user public key
  * @param {string} email - User email
- * @returns {Promise<string|null>} - Public key atau null
+ * @returns {Promise<Object|null>} - { email, public_key } atau null
  */
 async function getUserPublicKey(email) {
-  // TODO: SELECT public_key FROM users WHERE email = ?
-  throw new Error('getUserPublicKey not implemented');
+  const sql = `SELECT email, public_key FROM users WHERE email = $1`;
+  return await queryOne(sql, [email]);
 }
 
 module.exports = {
