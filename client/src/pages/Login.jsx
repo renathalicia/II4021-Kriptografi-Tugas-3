@@ -1,15 +1,8 @@
-/**
- * Login Page Component
- * Location: client/src/pages/Login.jsx
- */
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  deriveKeyFromPassword,
-  decryptAES,
-  importPrivateKey
-} from '../crypto/cryptoHelpers';
+import { deriveKeyFromPassword } from '../crypto/pbkdf2';
+import { decryptAES } from '../crypto/aes';
+import { importPrivateKey } from '../crypto/ecdh';
 import { authAPI, getJWTFromCookie } from '../services/api';
 import './Login.css';
 

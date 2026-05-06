@@ -1,11 +1,7 @@
-/**
- * Contacts Page Component
- * Location: client/src/pages/Contacts.jsx
- */
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usersAPI, authAPI, getJWTFromCookie } from '../services/api';
+import { usersAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './Contacts.css';
 
 function Contacts() {
@@ -50,7 +46,7 @@ function Contacts() {
   };
 
   const handleLogout = () => {
-    authAPI.logout();
+    logout();
     navigate('/login');
   };
 

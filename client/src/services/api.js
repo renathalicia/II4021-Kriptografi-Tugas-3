@@ -1,31 +1,30 @@
-/**
- * API Service untuk komunikasi dengan backend
- * Location: client/src/services/api.js
- */
+import { API_BASE_URL, JWT_COOKIE_NAME, JWT_MAX_AGE } from '../utils/constants';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// ============================================
+// JWT Cookie Management
+// ============================================
 
-// Helper untuk get JWT from cookie
-function getJWTFromCookie() {
+export function getJWTFromCookie() {
   const cookies = document.cookie.split(';');
   for (let cookie of cookies) {
     const [name, value] = cookie.trim().split('=');
-    if (name === 'jwt') return value;
+    if (name === JWT_COOKIE_NAME) return value;
   }
   return null;
 }
 
-// Helper untuk set JWT cookie
-function setJWTCookie(jwt, maxAge = 86400) {
-  document.cookie = `jwt=${jwt}; max-age=${maxAge}; path=/; SameSite=Strict`;
+export function setJWTCookie(jwt, maxAge = JWT_MAX_AGE) {
+  document.cookie = `${JWT_COOKIE_NAME}=${jwt}; max-age=${maxAge}; path=/; SameSite=Strict`;
 }
 
-// Helper untuk clear JWT cookie
-function clearJWTCookie() {
-  document.cookie = 'jwt=; max-age=0; path=/';
+export function clearJWTCookie() {
+  document.cookie = `${JWT_COOKIE_NAME}=; max-age=0; path=/`;
 }
 
-// Generic fetch dengan JWT auth
+// ============================================
+// Generic Fetch dengan Auth
+// ============================================
+
 async function fetchWithAuth(endpoint, options = {}) {
   const jwt = getJWTFromCookie();
   
@@ -41,7 +40,9 @@ async function fetchWithAuth(endpoint, options = {}) {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
   
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Network error' }));
+    const error = await response.json().catch(() => ({ 
+      message: `HTTP Error ${response.status}` 
+    }));
     throw new Error(error.message || `HTTP ${response.status}`);
   }
   
@@ -49,10 +50,11 @@ async function fetchWithAuth(endpoint, options = {}) {
 }
 
 // ============================================
-// AUTH API
+// Auth API
 // ============================================
 
 export const authAPI = {
+  // Register user baru
   async register(email, password, publicKey, encryptedPrivateKey, privateKeyIV, salt) {
     return fetchWithAuth('/register', {
       method: 'POST',
@@ -67,6 +69,7 @@ export const authAPI = {
     });
   },
 
+  // Login user
   async login(email, password) {
     const result = await fetchWithAuth('/login', {
       method: 'POST',
@@ -81,6 +84,7 @@ export const authAPI = {
     return result;
   },
 
+  // Logout user
   logout() {
     clearJWTCookie();
     sessionStorage.clear();
@@ -88,24 +92,27 @@ export const authAPI = {
 };
 
 // ============================================
-// USERS API
+// Users API
 // ============================================
 
 export const usersAPI = {
+  // Get all users (untuk daftar kontak)
   async getAll() {
     return fetchWithAuth('/users');
   },
 
+  // Get public key dari user tertentu
   async getPublicKey(email) {
     return fetchWithAuth(`/users/${encodeURIComponent(email)}/publicKey`);
   }
 };
 
 // ============================================
-// MESSAGES API
+// Messages API
 // ============================================
 
 export const messagesAPI = {
+  // Kirim pesan baru
   async send(senderEmail, receiverEmail, ciphertext, iv, mac) {
     return fetchWithAuth('/messages', {
       method: 'POST',
@@ -120,16 +127,17 @@ export const messagesAPI = {
     });
   },
 
+  // Get message history
   async getHistory(user1, user2) {
-    return fetchWithAuth(`/messages?user1=${encodeURIComponent(user1)}&user2=${encodeURIComponent(user2)}`);
+    return fetchWithAuth(
+      `/messages?user1=${encodeURIComponent(user1)}&user2=${encodeURIComponent(user2)}`
+    );
   },
 
+  // Get new messages setelah timestamp tertentu
   async getNew(user1, user2, afterTimestamp) {
     return fetchWithAuth(
       `/messages/new?user1=${encodeURIComponent(user1)}&user2=${encodeURIComponent(user2)}&after=${afterTimestamp}`
     );
   }
 };
-
-// Export helpers
-export { getJWTFromCookie, setJWTCookie, clearJWTCookie };

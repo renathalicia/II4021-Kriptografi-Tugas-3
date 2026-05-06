@@ -1,22 +1,9 @@
-/**
- * Chat Page Component
- * Location: client/src/pages/Chat.jsx
- */
-
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  importPublicKey,
-  importPrivateKey,
-  computeSharedSecret,
-  deriveAESKeyFromSharedSecret,
-  encryptAES,
-  decryptAES,
-  computeMAC,
-  verifyMAC,
-  exportAESKey,
-  importAESKey
-} from '../crypto/cryptoHelpers';
+import { importPublicKey, importPrivateKey, computeSharedSecret } from '../crypto/ecdh';
+import { deriveAESKeyFromSharedSecret, exportAESKey, importAESKey } from '../crypto/hkdf';
+import { encryptAES, decryptAES } from '../crypto/aes';
+import { computeMAC, verifyMAC } from '../crypto/hmac';
 import { usersAPI, messagesAPI, getJWTFromCookie } from '../services/api';
 import './Chat.css';
 

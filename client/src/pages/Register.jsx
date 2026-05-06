@@ -1,17 +1,8 @@
-/**
- * Register Page Component
- * Location: client/src/pages/Register.jsx
- */
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  generateECDHKeyPair,
-  exportPublicKey,
-  exportPrivateKey,
-  deriveKeyFromPassword,
-  encryptAES
-} from '../crypto/cryptoHelpers';
+import { generateECDHKeyPair, exportPublicKey, exportPrivateKey } from '../crypto/ecdh';
+import { deriveKeyFromPassword } from '../crypto/pbkdf2';
+import { encryptAES } from '../crypto/aes';
 import { authAPI } from '../services/api';
 import './Register.css';
 
