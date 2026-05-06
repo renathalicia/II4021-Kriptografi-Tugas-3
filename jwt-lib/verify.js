@@ -13,8 +13,8 @@ const ALG_PARAMS = {
 
 // ngubah ttd ecdsa dari format raw (r|s) ke format DER sesuai RFC 7518
 function rawToDer(rawSig, keySize) {
-    const r = rawSig.slice(0, keySize);
-    const s = rawSig.slice(keySize);
+    let r = rawSig.slice(0, keySize);
+    let s = rawSig.slice(keySize);
 
     // nambah 0x0o didepan, biar int tetap positif
     if (r[0] & 0x80) r = Buffer.concat([Buffer.alloc(1, 0), r]);
