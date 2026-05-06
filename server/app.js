@@ -5,17 +5,15 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 
-// ============================================================================
-// MIDDLEWARE GLOBAL
-// ============================================================================
-
 // CORS Configuration
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true,
+const corsOptions = {
+  origin: 'http://localhost:5173', // Frontend Vite dev server
+  credentials: true, // Allow cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 
 // Body Parser
 app.use(express.json());
@@ -23,10 +21,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // Cookie Parser
 app.use(cookieParser());
-
-// ============================================================================
-// ROUTES (PLACEHOLDER)
-// ============================================================================
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -37,18 +31,17 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Auth routes (akan diimplementasi di task 5)
-app.use('/auth', require('./routes/auth'));
+// Auth routes (register & login)
+// Routes: POST /api/register, POST /api/login
+app.use('/api', require('./routes/auth'));
 
-// Users routes (akan diimplementasi di task 6)
-app.use('/users', require('./routes/users'));
+// Users routes
+// Routes: GET /api/users, GET /api/users/:email/publicKey
+app.use('/api/users', require('./routes/users'));
 
-// Messages routes (akan diimplementasi di task 7)
-app.use('/messages', require('./routes/messages'));
-
-// ============================================================================
-// ERROR HANDLING MIDDLEWARE
-// ============================================================================
+// Messages routes
+// Routes: POST /api/messages, GET /api/messages, GET /api/messages/new
+app.use('/api/messages', require('./routes/messages'));
 
 // 404 Handler
 app.use((req, res) => {
@@ -73,9 +66,5 @@ app.use((err, req, res, next) => {
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
-
-// ============================================================================
-// EXPORT APP
-// ============================================================================
 
 module.exports = app;
