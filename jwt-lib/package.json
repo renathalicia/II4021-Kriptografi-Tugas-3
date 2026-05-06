@@ -1,0 +1,16 @@
+{
+  "name": "jwt-lib",
+  "version": "1.0.0",
+  "description": "custom jwt sign/verify library pakai ecdsa(es256/384/512)",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --verbose"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
