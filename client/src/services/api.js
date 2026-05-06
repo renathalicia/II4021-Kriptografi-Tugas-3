@@ -56,22 +56,24 @@ async function fetchWithAuth(endpoint, options = {}) {
 export const authAPI = {
   // Register user baru
   async register(email, password, publicKey, encryptedPrivateKey, privateKeyIV, salt) {
-    return fetchWithAuth('/register', {
+    return fetchWithAuth('/auth/register', {
       method: 'POST',
       body: JSON.stringify({
         email,
         password,
-        publicKey,
-        encryptedPrivateKey,
-        privateKeyIV,
-        salt
+        public_key: publicKey,
+        encrypted_private_key: encryptedPrivateKey,
+        kdf_params: {
+          iv: privateKeyIV,
+          salt: salt
+        }
       })
     });
   },
 
   // Login user
   async login(email, password) {
-    const result = await fetchWithAuth('/login', {
+    const result = await fetchWithAuth('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
@@ -85,7 +87,12 @@ export const authAPI = {
   },
 
   // Logout user
-  logout() {
+  async logout() {
+    try {
+      await fetchWithAuth('/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.error('Logout error', e);
+    }
     clearJWTCookie();
     sessionStorage.clear();
   }
@@ -98,12 +105,12 @@ export const authAPI = {
 export const usersAPI = {
   // Get all users (untuk daftar kontak)
   async getAll() {
-    return fetchWithAuth('/users');
+    return fetchWithAuth('/users/contacts');
   },
 
   // Get public key dari user tertentu
   async getPublicKey(email) {
-    return fetchWithAuth(`/users/${encodeURIComponent(email)}/publicKey`);
+    return fetchWithAuth(`/users/${encodeURIComponent(email)}/pubkey`);
   }
 };
 
@@ -114,30 +121,36 @@ export const usersAPI = {
 export const messagesAPI = {
   // Kirim pesan baru
   async send(senderEmail, receiverEmail, ciphertext, iv, mac) {
+    // senderEmail dan timestamp di-handle oleh server dari JWT dan DB
     return fetchWithAuth('/messages', {
       method: 'POST',
       body: JSON.stringify({
-        sender_email: senderEmail,
         receiver_email: receiverEmail,
         ciphertext,
         iv,
-        mac,
-        timestamp: new Date().toISOString()
+        mac
       })
     });
   },
 
   // Get message history
   async getHistory(user1, user2) {
+    // Lawan bicara yang akan difilter dari server (dengan asumsi user1 atau user2 adalah current user)
+    const currentEmail = sessionStorage.getItem('email');
+    const lawanBicara = user1 === currentEmail ? user2 : user1;
+    
     return fetchWithAuth(
-      `/messages?user1=${encodeURIComponent(user1)}&user2=${encodeURIComponent(user2)}`
+      `/messages?with=${encodeURIComponent(lawanBicara)}`
     );
   },
 
-  // Get new messages setelah timestamp tertentu
-  async getNew(user1, user2, afterTimestamp) {
+  // Get new messages setelah message ID tertentu
+  async getNew(user1, user2, afterId) {
+    const currentEmail = sessionStorage.getItem('email');
+    const lawanBicara = user1 === currentEmail ? user2 : user1;
+    
     return fetchWithAuth(
-      `/messages/new?user1=${encodeURIComponent(user1)}&user2=${encodeURIComponent(user2)}&after=${afterTimestamp}`
+      `/messages?with=${encodeURIComponent(lawanBicara)}&afterId=${encodeURIComponent(afterId)}`
     );
   }
-};
+};

@@ -31,7 +31,7 @@ function derToRaw(derSig, keySize) {
   if (s[0] === 0x00) s = s.slice(1);
 
   // biar pad kiri tepat keySize byte
-  const rPadded = Buffer.concat([Buffer.alloc(matchMedia.mac(0, keySize - r.length)), r]);
+  const rPadded = Buffer.concat([Buffer.alloc(Math.max(0, keySize - r.length)), r]);
   const sPadded = Buffer.concat([Buffer.alloc(Math.max(0, keySize - s.length)), s]);
 
   return Buffer.concat([rPadded, sPadded]);

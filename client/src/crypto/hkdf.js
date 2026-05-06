@@ -25,7 +25,7 @@ export async function deriveAESKeyFromSharedSecret(sharedSecret, salt = '', info
       name: CRYPTO_CONFIG.AES_ALGORITHM,
       length: CRYPTO_CONFIG.AES_KEY_LENGTH
     },
-    false, // not extractable
+    true, // extractable (harus true agar bisa diexport ke sessionStorage)
     ['encrypt', 'decrypt']
   );
 }

@@ -19,6 +19,7 @@ function Chat() {
   const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
   const pollingIntervalRef = useRef(null);
+  const lastMessageIdRef = useRef(0);
 
   useEffect(() => {
     if (!contactEmail) {
@@ -58,17 +59,23 @@ function Chat() {
         console.log('Using existing chat key');
         const key = await importAESKey(storedKey);
         setChatKey(key);
+        
+        // Load message history
+        await loadMessages(key);
+
+        // Start polling for new messages
+        startMessagePolling(key);
       } else {
         console.log('Performing key exchange...');
         const key = await performKeyExchange();
         setChatKey(key);
+        
+        // Load message history
+        await loadMessages(key);
+
+        // Start polling for new messages
+        startMessagePolling(key);
       }
-
-      // Load message history
-      await loadMessages();
-
-      // Start polling for new messages
-      startMessagePolling();
 
       setLoading(false);
     } catch (err) {
@@ -81,7 +88,12 @@ function Chat() {
   const performKeyExchange = async () => {
     try {
       // Get contact's public key
-      const { publicKey: contactPublicKeyBase64 } = await usersAPI.getPublicKey(contactEmail);
+      const { public_key: contactPublicKeyBase64 } = await usersAPI.getPublicKey(contactEmail);
+      
+      if (!contactPublicKeyBase64) {
+        throw new Error('Public key kontak tidak ditemukan.');
+      }
+      
       const contactPublicKey = await importPublicKey(contactPublicKeyBase64);
 
       // Get our private key
@@ -110,36 +122,45 @@ function Chat() {
     }
   };
 
-  const loadMessages = async () => {
+  const loadMessages = async (currentChatKey) => {
     try {
       const myEmail = sessionStorage.getItem('email');
       const encryptedMessages = await messagesAPI.getHistory(myEmail, contactEmail);
 
       const decryptedMessages = [];
       for (const msg of encryptedMessages) {
-        const decrypted = await receiveMessage(msg);
+        const decrypted = await receiveMessage(msg, currentChatKey);
         decryptedMessages.push(decrypted);
       }
 
       setMessages(decryptedMessages);
+      
+      // Update lastMessageIdRef based on loaded messages
+      if (decryptedMessages.length > 0) {
+        lastMessageIdRef.current = decryptedMessages[decryptedMessages.length - 1].id;
+      }
     } catch (err) {
       console.error('Load messages error:', err);
     }
   };
 
-  const startMessagePolling = () => {
+  const startMessagePolling = (currentChatKey) => {
     pollingIntervalRef.current = setInterval(async () => {
       try {
         const myEmail = sessionStorage.getItem('email');
-        const lastTimestamp = messages.length > 0
-          ? messages[messages.length - 1].timestamp
-          : new Date(0).toISOString();
+        const lastId = lastMessageIdRef.current;
 
-        const newMessages = await messagesAPI.getNew(myEmail, contactEmail, lastTimestamp);
+        const newMessages = await messagesAPI.getNew(myEmail, contactEmail, lastId);
 
-        for (const msg of newMessages) {
-          const decrypted = await receiveMessage(msg);
-          setMessages(prev => [...prev, decrypted]);
+        if (newMessages && newMessages.length > 0) {
+          const decryptedNewMessages = [];
+          for (const msg of newMessages) {
+            const decrypted = await receiveMessage(msg, currentChatKey);
+            decryptedNewMessages.push(decrypted);
+          }
+          
+          setMessages(prev => [...prev, ...decryptedNewMessages]);
+          lastMessageIdRef.current = newMessages[newMessages.length - 1].id;
         }
       } catch (err) {
         console.error('Polling error:', err);
@@ -163,16 +184,18 @@ function Chat() {
       const mac = await computeMAC(ciphertext, chatKey);
 
       // Send to server
-      await messagesAPI.send(myEmail, contactEmail, ciphertext, iv, mac);
+      const result = await messagesAPI.send(myEmail, contactEmail, ciphertext, iv, mac);
+      const dbMessage = result.data;
 
       // Add to local messages
       const newMessage = {
+        id: dbMessage.id,
         sender_email: myEmail,
         receiver_email: contactEmail,
         ciphertext,
         iv,
         mac,
-        timestamp: new Date().toISOString(),
+        timestamp: dbMessage.timestamp || new Date().toISOString(),
         plaintext,
         isSent: true,
         decryptionSuccess: true,
@@ -180,6 +203,7 @@ function Chat() {
       };
 
       setMessages(prev => [...prev, newMessage]);
+      lastMessageIdRef.current = newMessage.id;
 
     } catch (err) {
       console.error('Send message error:', err);
@@ -188,7 +212,7 @@ function Chat() {
     }
   };
 
-  const receiveMessage = async (encryptedMessage) => {
+  const receiveMessage = async (encryptedMessage, currentChatKey) => {
     const myEmail = sessionStorage.getItem('email');
     const isSent = encryptedMessage.sender_email === myEmail;
 
@@ -197,7 +221,7 @@ function Chat() {
       const isValid = await verifyMAC(
         encryptedMessage.ciphertext,
         encryptedMessage.mac,
-        chatKey
+        currentChatKey
       );
 
       if (!isValid) {
@@ -214,7 +238,7 @@ function Chat() {
       const plaintext = await decryptAES(
         encryptedMessage.ciphertext,
         encryptedMessage.iv,
-        chatKey
+        currentChatKey
       );
 
       return {

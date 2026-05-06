@@ -4,10 +4,12 @@ import { deriveKeyFromPassword } from '../crypto/pbkdf2';
 import { decryptAES } from '../crypto/aes';
 import { importPrivateKey } from '../crypto/ecdh';
 import { authAPI, getJWTFromCookie } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 function Login() {
   const navigate = useNavigate();
+  const { login: loginContext } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,11 +59,9 @@ function Login() {
       // STEP 4: Import private key to verify
       await importPrivateKey(privateKeyBase64);
 
-      // STEP 5: Store in session storage
+      // STEP 5: Store in context & session storage
       console.log('Storing keys in session...');
-      sessionStorage.setItem('privateKey', privateKeyBase64);
-      sessionStorage.setItem('publicKey', publicKey);
-      sessionStorage.setItem('email', email);
+      loginContext(email, privateKeyBase64, publicKey);
 
       // Navigate to contacts
       navigate('/contacts');

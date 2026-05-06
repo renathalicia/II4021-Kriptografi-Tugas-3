@@ -1,37 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usersAPI } from '../services/api';
+import { usersAPI, authAPI, getJWTFromCookie } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import './Contacts.css';
 
 function Contacts() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    // Check if logged in
-    const jwt = getJWTFromCookie();
-    const privateKey = sessionStorage.getItem('privateKey');
-    if (!jwt || !privateKey) {
-      navigate('/login');
-      return;
-    }
-
-    loadContacts();
-  }, [navigate]);
-
   const loadContacts = async () => {
     try {
       setLoading(true);
-      const users = await usersAPI.getAll();
+      // Panggil endpoint GET /users/contacts
+      const result = await usersAPI.getAll();
       
-      // Filter out current user
-      const myEmail = sessionStorage.getItem('email');
-      const filteredContacts = users.filter(user => user.email !== myEmail);
+      // Response backend berbentuk { contacts: ["email1", "email2"] }
+      const emailList = result.contacts || [];
       
-      setContacts(filteredContacts);
+      // Format ke dalam bentuk object [{email: '...'}, ...] untuk dirender
+      const formattedContacts = emailList.map(email => ({ email }));
+      
+      setContacts(formattedContacts);
     } catch (err) {
       console.error('Load contacts error:', err);
       if (err.message.includes('401')) {
@@ -44,6 +36,18 @@ function Contacts() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Check if logged in
+    const jwt = getJWTFromCookie();
+    const privateKey = sessionStorage.getItem('privateKey');
+    if (!jwt || !privateKey) {
+      navigate('/login');
+      return;
+    }
+
+    loadContacts();
+  }, [navigate]);
 
   const handleLogout = () => {
     logout();

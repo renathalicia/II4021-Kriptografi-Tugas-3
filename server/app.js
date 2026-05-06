@@ -31,17 +31,17 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Auth routes (register & login)
-// Routes: POST /api/register, POST /api/login
-app.use('/api', require('./routes/auth'));
+// Auth routes (register, login, logout)
+// Routes: POST /auth/register, POST /auth/login, POST /auth/logout
+app.use('/auth', require('./routes/auth'));
 
 // Users routes
-// Routes: GET /api/users, GET /api/users/:email/publicKey
-app.use('/api/users', require('./routes/users'));
+// Routes: GET /users/contacts, GET /users/:email/pubkey
+app.use('/users', require('./routes/users'));
 
 // Messages routes
-// Routes: POST /api/messages, GET /api/messages, GET /api/messages/new
-app.use('/api/messages', require('./routes/messages'));
+// Routes: POST /messages, GET /messages?with=:email
+app.use('/messages', require('./routes/messages'));
 
 // 404 Handler
 app.use((req, res) => {
