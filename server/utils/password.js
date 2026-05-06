@@ -6,7 +6,7 @@ const bcrypt = require('bcrypt');
 // Implementasi utility untuk secure password handling
 // Sesuai spesifikasi poin B.1-2: Password tidak boleh disimpan plaintext
 
-const ROUNDS = process.env.BCRYPT_ROUNDS || 10;
+const ROUNDS = parseInt(process.env.BCRYPT_ROUNDS, 10) || 10;
 
 /**
  * Hash password menggunakan bcrypt
