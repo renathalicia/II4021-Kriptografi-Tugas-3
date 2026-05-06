@@ -5,16 +5,25 @@ const crypto = require('crypto');
 const {encodeObjectToBase64url, base64urlEncode} = require('./utils');
 
 const ALG_PARAMS = {
-    ES256: {hash: 'SHA256', keySize: 32},
-    ES384: {hash: 'SHA384', keySize: 48},
-    ES512: {hash: 'SHA512', keySize: 66},
+    ES256: {hash: 'SHA256', keySize: 32, curve: 'prime256v1'},
+    ES384: {hash: 'SHA384', keySize: 48, curve: 'secp384r1'},
+    ES512: {hash: 'SHA512', keySize: 66, curve: 'secp521r1'},
 };
 
 // ngubah ttd ecdsa dari format DER ke format raw (r|s) sesuai RFC 7518
 function derToRaw(derSig, keySize) {
   if (derSig[0] !== 0x30) throw new Error('Tanda tangan DER tidak valid: byte pertama tidak 0x30');
 
-  let offset = 2; // ngelewatin 0x30 dan panjang total
+  // handle long-form DER length (0x81/0x82) yang muncul di ES512/P-521
+  // karena content seq es512 selalu > 127 byte
+  let offset = 1; // mulai setelah 0x30
+  if (derSig[offset] & 0x80) {
+      // long-form: byte ini bilang "berapa byte berikutnya adalah length"
+      offset += 1 + (derSig[offset] & 0x7F);
+  } else {
+      offset++; // short-form: cukup 1 byte
+  }  
+
   if (derSig[offset] != 0x02) throw new Error('DER: tidak ada integer pertama (r)');
   offset++;
   const rLen = derSig[offset++];
@@ -56,6 +65,18 @@ function sign(header, claims, payload, privateKey) {
 
   if (typeof privateKey !== 'string' || privateKey.trim() === '') throw new Error('Private key harus berupa string PEM');
 
+  // cek kurva private key cocok dengan algoritma yang diminta
+  try {
+      const keyObj = crypto.createPrivateKey(privateKey);
+      const actualCurve = keyObj.asymmetricKeyDetails?.namedCurve;
+      if (actualCurve && actualCurve !== ALG_PARAMS[header.alg].curve) {
+          throw new Error(`Kurva key (${actualCurve}) tidak cocok dengan algoritma ${header.alg}`);
+      }
+  } catch (e) {
+      if (e.message.includes('Kurva')) throw e;
+      throw new Error(`Private key tidak valid: ${e.message}`);
+  }
+  
   const {hash, keySize} = ALG_PARAMS[header.alg];
 
   // Gabungkan claims dan payload jadi satu objek

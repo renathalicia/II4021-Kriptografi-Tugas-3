@@ -24,19 +24,35 @@ function rawToDer(rawSig, keySize) {
     const sLen = s.length;
     const totalLen = 2 + rLen + 2 + sLen;
 
-    const der = Buffer.alloc(2 + totalLen);
-    let off = 0;
-    der[off++] = 0x30;
-    der[off++] = totalLen;
-    der[off++] = 0x02;
-    der[off++] = rLen;
-    r.copy(der, off);
-    off += rLen;
-    der[off++] = 0x02;
-    der[off++] = sLen;
-    s.copy(der, off);
+    // const der = Buffer.alloc(2 + totalLen);
+    // let off = 0;
+    // der[off++] = 0x30;
+    // der[off++] = totalLen;
+    // der[off++] = 0x02;
+    // der[off++] = rLen;
+    // r.copy(der, off);
+    // off += rLen;
+    // der[off++] = 0x02;
+    // der[off++] = sLen;
+    // s.copy(der, off);
 
-    return der;
+    // return der;
+    
+    let seqLenBuf;
+    if (totalLen <= 0x7F) {
+        seqLenBuf = Buffer.from([totalLen]);
+    } else if (totalLen <= 0xFF) {
+        seqLenBuf = Buffer.from([0x81, totalLen]);         // long-form 1 byte
+    } else {
+        seqLenBuf = Buffer.from([0x82, totalLen >> 8, totalLen & 0xFF]); // long-form 2 byte
+    }
+
+    return Buffer.concat([
+        Buffer.from([0x30]),
+        seqLenBuf,
+        Buffer.from([0x02, rLen]), r,
+        Buffer.from([0x02, sLen]), s,
+    ]);
 }
 
 /**

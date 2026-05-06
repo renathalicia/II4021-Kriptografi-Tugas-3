@@ -121,6 +121,6 @@ describe('sign – edge cases', () => {
   });
 
   test('throw error jika private key tidak cocok dengan kurva', () => {
-    expect(() => sign(H256, {}, {}, kp521.privateKey)).toThrow();
+    expect(() => sign(H256, {}, {}, kp521.privateKey)).toThrow(/Kurva/i);
   });
 });
