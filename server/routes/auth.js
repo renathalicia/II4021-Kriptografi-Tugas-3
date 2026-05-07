@@ -104,24 +104,24 @@ router.post('/login', async (req, res, next) => {
     }
 
     // 3. Buat JWT menggunakan jwt-lib (A2)
-    const privateKeyPath = process.env.JWT_PRIVATE_KEY_PATH 
+    const privateKeyPath = process.env.JWT_PRIVATE_KEY_PATH
       ? path.resolve(process.cwd(), process.env.JWT_PRIVATE_KEY_PATH)
       : path.join(__dirname, '../../keys/ec_private.pem');
 
     if (!fs.existsSync(privateKeyPath)) {
       throw new Error(`Private key tidak ditemukan di path: ${privateKeyPath}`);
     }
-    
+
     const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
 
     const header = { alg: 'ES256', typ: 'JWT' };
-    const claims = { 
-      sub: email, 
-      iat: Math.floor(Date.now() / 1000), 
+    const claims = {
+      sub: email,
+      iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 1 hari
     };
 
-    const token = sign(header, claims, {}, privateKey);
+    const token = await sign(header, claims, {}, privateKey);
 
     // 4. Simpan JWT ke cookie httpOnly
     res.cookie('token', token, {
@@ -134,8 +134,8 @@ router.post('/login', async (req, res, next) => {
     // 5. Return response
     let parsedKdfParams;
     try {
-      parsedKdfParams = typeof user.kdf_params === 'string' 
-        ? JSON.parse(user.kdf_params) 
+      parsedKdfParams = typeof user.kdf_params === 'string'
+        ? JSON.parse(user.kdf_params)
         : user.kdf_params;
     } catch (err) {
       parsedKdfParams = user.kdf_params;

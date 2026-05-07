@@ -54,12 +54,12 @@ function Chat() {
 
       // Check if we already have chat key
       const storedKey = sessionStorage.getItem(`chatKey_${contactEmail}`);
-      
+
       if (storedKey) {
         console.log('Using existing chat key');
         const key = await importAESKey(storedKey);
         setChatKey(key);
-        
+
         // Load message history
         await loadMessages(key);
 
@@ -69,7 +69,7 @@ function Chat() {
         console.log('Performing key exchange...');
         const key = await performKeyExchange();
         setChatKey(key);
-        
+
         // Load message history
         await loadMessages(key);
 
@@ -89,11 +89,11 @@ function Chat() {
     try {
       // Get contact's public key
       const { public_key: contactPublicKeyBase64 } = await usersAPI.getPublicKey(contactEmail);
-      
+
       if (!contactPublicKeyBase64) {
         throw new Error('Public key kontak tidak ditemukan.');
       }
-      
+
       const contactPublicKey = await importPublicKey(contactPublicKeyBase64);
 
       // Get our private key
@@ -134,7 +134,7 @@ function Chat() {
       }
 
       setMessages(decryptedMessages);
-      
+
       // Update lastMessageIdRef based on loaded messages
       if (decryptedMessages.length > 0) {
         lastMessageIdRef.current = decryptedMessages[decryptedMessages.length - 1].id;
@@ -158,7 +158,7 @@ function Chat() {
             const decrypted = await receiveMessage(msg, currentChatKey);
             decryptedNewMessages.push(decrypted);
           }
-          
+
           setMessages(prev => [...prev, ...decryptedNewMessages]);
           lastMessageIdRef.current = newMessages[newMessages.length - 1].id;
         }
@@ -217,21 +217,25 @@ function Chat() {
     const isSent = encryptedMessage.sender_email === myEmail;
 
     try {
-      // Verify MAC (BONUS)
-      const isValid = await verifyMAC(
-        encryptedMessage.ciphertext,
-        encryptedMessage.mac,
-        currentChatKey
-      );
+      let macValid = true; // default: anggap valid jika tidak ada MAC
 
-      if (!isValid) {
-        return {
-          ...encryptedMessage,
-          plaintext: '⚠️ PESAN TIDAK VALID (MAC mismatch)',
-          isSent,
-          decryptionSuccess: false,
-          macValid: false
-        };
+      // Verify MAC (BONUS) jika field mac tersedia
+      if (encryptedMessage.mac) {
+        const isValid = await verifyMAC(
+          encryptedMessage.ciphertext,
+          encryptedMessage.mac,
+          currentChatKey
+        );
+
+        if (!isValid) {
+          return {
+            ...encryptedMessage,
+            plaintext: '⚠️ PESAN TIDAK VALID (MAC mismatch)',
+            isSent,
+            decryptionSuccess: false,
+            macValid: false
+          };
+        }
       }
 
       // Decrypt message
@@ -246,7 +250,7 @@ function Chat() {
         plaintext,
         isSent,
         decryptionSuccess: true,
-        macValid: true
+        macValid: encryptedMessage.mac ? true : null
       };
 
     } catch (err) {
@@ -293,9 +297,8 @@ function Chat() {
           return (
             <div
               key={idx}
-              className={`message ${msg.isSent ? 'sent' : 'received'} ${
-                !msg.decryptionSuccess ? 'error' : ''
-              }`}
+              className={`message ${msg.isSent ? 'sent' : 'received'} ${!msg.decryptionSuccess ? 'error' : ''
+                }`}
             >
               <div className="message-content">
                 {statusIcon}{msg.plaintext}

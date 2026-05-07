@@ -1,8 +1,17 @@
 import { CRYPTO_CONFIG } from '../utils/constants';
-import { stringToArrayBuffer } from './encoding';
+import { stringToArrayBuffer, base64ToArrayBuffer } from './encoding';
 
 // Derive AES key dari password (untuk encrypt private key)
 export async function deriveKeyFromPassword(password, salt) {
+  let saltBuffer;
+  try {
+    // Coba parse sebagai base64 (format baru dengan random bytes)
+    saltBuffer = base64ToArrayBuffer(salt);
+  } catch (e) {
+    // Fallback ke string biasa (format lama menggunakan email)
+    saltBuffer = stringToArrayBuffer(salt);
+  }
+
   // Import password sebagai key material
   const keyMaterial = await window.crypto.subtle.importKey(
     'raw',
@@ -16,7 +25,7 @@ export async function deriveKeyFromPassword(password, salt) {
   return await window.crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: stringToArrayBuffer(salt),
+      salt: saltBuffer,
       iterations: CRYPTO_CONFIG.PBKDF2_ITERATIONS,
       hash: CRYPTO_CONFIG.PBKDF2_HASH
     },

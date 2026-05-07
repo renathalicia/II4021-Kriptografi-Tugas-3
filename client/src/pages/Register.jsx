@@ -4,6 +4,7 @@ import { generateECDHKeyPair, exportPublicKey, exportPrivateKey } from '../crypt
 import { deriveKeyFromPassword } from '../crypto/pbkdf2';
 import { encryptAES } from '../crypto/aes';
 import { authAPI } from '../services/api';
+import { arrayBufferToBase64 } from '../crypto/encoding';
 import './Register.css';
 
 function Register() {
@@ -32,7 +33,8 @@ function Register() {
 
       // STEP 3: Derive encryption key from password
       console.log('Deriving encryption key...');
-      const salt = email; // Gunakan email sebagai salt
+      const saltBytes = window.crypto.getRandomValues(new Uint8Array(16));
+      const salt = arrayBufferToBase64(saltBytes.buffer);
       const encryptionKey = await deriveKeyFromPassword(password, salt);
 
       // STEP 4: Encrypt private key
