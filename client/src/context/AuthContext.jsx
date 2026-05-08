@@ -39,8 +39,11 @@ export function AuthProvider({ children }) {
     setUser({ email });
   };
 
-  const logout = () => {
-    authAPI.logout();
+  const logout = async () => {
+    await authAPI.logout();
+    sessionStorage.removeItem(STORAGE_KEYS.EMAIL);
+    sessionStorage.removeItem(STORAGE_KEYS.PRIVATE_KEY);
+    sessionStorage.removeItem(STORAGE_KEYS.PUBLIC_KEY);
     setIsAuthenticated(false);
     setUser(null);
   };

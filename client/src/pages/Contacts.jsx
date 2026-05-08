@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersAPI, authAPI, getJWTFromCookie } from '../services/api';
+import { STORAGE_KEYS } from '../utils/constants';
 import { useAuth } from '../context/AuthContext';
 import './Contacts.css';
 
@@ -40,7 +41,7 @@ function Contacts() {
   useEffect(() => {
     // Check if logged in
     const jwt = getJWTFromCookie();
-    const privateKey = sessionStorage.getItem('privateKey');
+    const privateKey = sessionStorage.getItem(STORAGE_KEYS.PRIVATE_KEY);
     if (!jwt || !privateKey) {
       navigate('/login');
       return;
@@ -49,8 +50,8 @@ function Contacts() {
     loadContacts();
   }, [navigate]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 

@@ -29,6 +29,7 @@ async function fetchWithAuth(endpoint, options = {}) {
   const jwt = getJWTFromCookie();
   
   const config = {
+    credentials: 'include',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -153,4 +154,4 @@ export const messagesAPI = {
       `/messages?with=${encodeURIComponent(lawanBicara)}&afterId=${encodeURIComponent(afterId)}`
     );
   }
-};
+};
