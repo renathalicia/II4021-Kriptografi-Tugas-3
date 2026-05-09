@@ -6,8 +6,9 @@ const cookieParser = require('cookie-parser');
 const app = express();
 
 // CORS Configuration
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
 const corsOptions = {
-  origin: 'http://localhost:5173', // Frontend Vite dev server
+  origin: corsOrigin, // Configurable via CORS_ORIGIN env var
   credentials: true, // Allow cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

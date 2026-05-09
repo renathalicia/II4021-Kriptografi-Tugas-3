@@ -1,0 +1,79 @@
+services:
+  # PostgreSQL Database (optional)
+  db:
+    image: postgres:15-alpine
+    container_name: kriptografi-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./server/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kriptografi-network
+
+  # Node.js Backend Server
+  server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.server
+    container_name: kriptografi-server
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 5001
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-postgres}
+      CORS_ORIGIN: http://localhost
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-10}
+      JWT_PRIVATE_KEY_PATH: ${JWT_PRIVATE_KEY_PATH:-/app/keys/ec_private.pem}
+      JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH:-/app/keys/ec_public.pem}
+    ports:
+      - "5001:5001"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - kriptografi-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # React Frontend (Nginx)
+  client:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.client
+      args:
+        VITE_API_URL: http://localhost:5001
+    container_name: kriptografi-client
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    networks:
+      - kriptografi-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  kriptografi-network:
+    driver: bridge

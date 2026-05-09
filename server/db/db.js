@@ -12,12 +12,14 @@ if (!DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set');
 }
 
+// Determine SSL mode based on environment.
+// Default is false for local development and Dockerized Postgres.
+const useSsl = process.env.PGSSLMODE === 'require' || process.env.PGSSLMODE === 'verify-full';
+
 // Create connection pool
 const pool = new Pool({
   connectionString: DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false  // Required untuk Supabase
-  },
+  ssl: useSsl ? { rejectUnauthorized: false } : false,
   max: 20,                      // Max connections
   idleTimeoutMillis: 30000,    // Idle timeout
   connectionTimeoutMillis: 2000 // Connection timeout
