@@ -1,9 +1,5 @@
 {
   "dependencies": {
     "docx": "^9.6.1"
-  },
-  "scripts": {
-    "dev": "node keys/generate-keys.js && nodemon server.js",
-    "start": "node keys/generate-keys.js && node server.js"
   }
 }
