@@ -1,10 +1,6 @@
 const bcrypt = require('bcryptjs');
 
-// ============================================================================
 // PASSWORD HASHING & VERIFICATION
-// ============================================================================
-// Implementasi utility untuk secure password handling
-// Sesuai spesifikasi poin B.1-2: Password tidak boleh disimpan plaintext
 
 const ROUNDS = parseInt(process.env.BCRYPT_ROUNDS, 10) || 10;
 

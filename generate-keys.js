@@ -1,14 +1,5 @@
 #!/usr/bin/env node
-// ============================================================================
 // GENERATE EC KEY PAIR (P-256 / ES256)
-// ============================================================================
-// Jalankan sekali sebelum memulai server:
-//   node generate-keys.js
-//
-// Output:
-//   keys/ec_private.pem  — private key (jangan di-commit ke git!)
-//   keys/ec_public.pem   — public key
-
 'use strict';
 
 const crypto = require('crypto');
@@ -17,7 +8,6 @@ const path = require('path');
 
 const KEYS_DIR = path.join(__dirname, 'keys');
 
-// Buat folder keys/ kalau belum ada
 if (!fs.existsSync(KEYS_DIR)) {
     fs.mkdirSync(KEYS_DIR, { recursive: true });
     console.log('📁 Folder keys/ dibuat');
@@ -26,7 +16,6 @@ if (!fs.existsSync(KEYS_DIR)) {
 const privateKeyPath = path.join(KEYS_DIR, 'ec_private.pem');
 const publicKeyPath = path.join(KEYS_DIR, 'ec_public.pem');
 
-// Cegah overwrite kecuali pakai flag --force
 const force = process.argv.includes('--force');
 
 if (!force && (fs.existsSync(privateKeyPath) || fs.existsSync(publicKeyPath))) {
@@ -38,7 +27,6 @@ if (!force && (fs.existsSync(privateKeyPath) || fs.existsSync(publicKeyPath))) {
     process.exit(1);
 }
 
-// Generate EC key pair (P-256, kompatibel dengan ES256 di jwt-lib)
 console.log('🔑 Generating EC P-256 key pair...');
 
 const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', {
@@ -58,7 +46,6 @@ console.log('⚠️  PENTING: Jangan commit keys/ec_private.pem ke git!');
 console.log('   Pastikan file keys/ sudah ada di .gitignore');
 console.log('');
 
-// Verifikasi: coba sign & verify sesuatu dengan key yang baru dibuat
 try {
     const testData = 'test-signature-verification';
     const signer = crypto.createSign('SHA256');

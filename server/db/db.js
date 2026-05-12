@@ -1,9 +1,7 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 const { Pool } = require('pg');
 
-// ============================================================================
 // DATABASE CONNECTION POOL
-// ============================================================================
 // PostgreSQL connection pool untuk Supabase
 
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -12,8 +10,6 @@ if (!DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set');
 }
 
-// Determine SSL mode based on environment.
-// Default is false for local development and Dockerized Postgres.
 const useSsl = process.env.PGSSLMODE === 'require' || process.env.PGSSLMODE === 'verify-full';
 
 // Create connection pool
@@ -25,9 +21,7 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000 // Connection timeout
 });
 
-// ============================================================================
 // CONNECTION POOL EVENTS
-// ============================================================================
 
 pool.on('error', (err) => {
   console.error('[DB POOL ERROR]', err);
@@ -37,9 +31,7 @@ pool.on('connect', () => {
   console.log('[DB] Connection established to PostgreSQL');
 });
 
-// ============================================================================
 // QUERY FUNCTION
-// ============================================================================
 
 /**
  * Execute query dengan parameter binding (prevent SQL injection)
@@ -92,9 +84,7 @@ async function execute(queryText, params = []) {
   }
 }
 
-// ============================================================================
 // INITIALIZATION
-// ============================================================================
 
 /**
  * Initialize database connection
@@ -124,9 +114,7 @@ async function closeDatabase() {
   }
 }
 
-// ============================================================================
 // EXPORTS
-// ============================================================================
 
 module.exports = {
   pool,

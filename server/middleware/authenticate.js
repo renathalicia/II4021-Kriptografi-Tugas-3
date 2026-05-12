@@ -1,8 +1,3 @@
-// ============================================================================
-// PLACEHOLDER: AUTHENTICATION MIDDLEWARE
-// ============================================================================
-// Akan diimplementasi di task 5-6 (setelah JWT setup)
-
 const fs = require('fs');
 const path = require('path');
 const { verify } = require('../../jwt-lib');
