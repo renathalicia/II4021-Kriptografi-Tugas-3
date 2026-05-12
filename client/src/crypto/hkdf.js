@@ -1,6 +1,6 @@
 import { CRYPTO_CONFIG } from '../utils/constants';
 import { stringToArrayBuffer } from './encoding';
-
+import { arrayBufferToBase64, base64ToArrayBuffer } from './encoding';
 export async function deriveAESKeyFromSharedSecret(sharedSecret, salt = '', info = CRYPTO_CONFIG.HKDF_INFO) {
   const keyMaterial = await window.crypto.subtle.importKey(
     'raw',
