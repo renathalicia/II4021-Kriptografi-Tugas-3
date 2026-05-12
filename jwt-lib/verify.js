@@ -16,7 +16,16 @@ function rawToDer(rawSig, keySize) {
     let r = rawSig.slice(0, keySize);
     let s = rawSig.slice(keySize);
 
-    // nambah 0x0o didepan, biar int tetap positif
+    // buang padding 0x00 yang ditambahkan untuk reach keySize
+    // tapi jangan buang 0x00 yang diperlukan untuk DER sign representation
+    while (r.length > 1 && r[0] === 0x00 && (r[1] & 0x80) === 0) {
+        r = r.slice(1);
+    }
+    while (s.length > 1 && s[0] === 0x00 && (s[1] & 0x80) === 0) {
+        s = s.slice(1);
+    }
+
+    // nambah 0x00 didepan, biar int tetap positif
     if (r[0] & 0x80) r = Buffer.concat([Buffer.alloc(1, 0), r]);
     if (s[0] & 0x80) s = Buffer.concat([Buffer.alloc(1, 0), s]);
 
