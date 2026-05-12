@@ -8,8 +8,8 @@ const app = express();
 // CORS Configuration
 const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
 const corsOptions = {
-  origin: corsOrigin, // Configurable via CORS_ORIGIN env var
-  credentials: true, // Allow cookies
+  origin: corsOrigin, 
+  credentials: true, 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200
@@ -32,16 +32,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Auth routes (register, login, logout)
-// Routes: POST /auth/register, POST /auth/login, POST /auth/logout
 app.use('/auth', require('./routes/auth'));
-
-// Users routes
-// Routes: GET /users/contacts, GET /users/:email/pubkey
 app.use('/users', require('./routes/users'));
-
-// Messages routes
-// Routes: POST /messages, GET /messages?with=:email
 app.use('/messages', require('./routes/messages'));
 
 // 404 Handler

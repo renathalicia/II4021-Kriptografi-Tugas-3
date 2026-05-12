@@ -1,8 +1,4 @@
-// ============================================================================
 // MESSAGE MODEL
-// ============================================================================
-// Placeholder untuk query-query terkait message
-// Akan diimplementasi di task 7 (Endpoint Messages)
 
 const { query } = require('../db/db');
 
@@ -45,16 +41,6 @@ async function getConversation(user1Email, user2Email, afterId) {
   sql += ` ORDER BY timestamp ASC`;
   
   return await query(sql, params);
-}
-
-/**
- * Get all messages for a user
- * @param {string} email - User email
- * @returns {Promise<Array>} - List of messages
- */
-async function getUserMessages(email) {
-  // TODO: SELECT * FROM messages WHERE receiver_email = ?
-  throw new Error('getUserMessages not implemented');
 }
 
 module.exports = {

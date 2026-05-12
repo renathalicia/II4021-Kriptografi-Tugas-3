@@ -3,20 +3,16 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
 COPY client/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
 COPY client/src ./src
 COPY client/index.html .
 COPY client/vite.config.js .
 COPY client/public ./public
 
-# Build app with Vite
-# VITE_API_URL build arg untuk connect ke backend
 ARG VITE_API_URL=http://localhost:5001
 ENV VITE_API_URL=$VITE_API_URL
 
@@ -25,13 +21,10 @@ RUN npm run build
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
 
-# Copy Nginx config
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
-# Copy built app from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port
 EXPOSE 80
 
 # Health check

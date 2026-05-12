@@ -94,6 +94,9 @@ function Chat() {
       const myPrivateKey = await importPrivateKey(myPrivateKeyBase64);
 
       const sharedSecret = await computeSharedSecret(myPrivateKey, contactPublicKey);
+      // Tambahkan sementara untuk testing:
+      const secretBytes = new Uint8Array(sharedSecret);
+      console.log('SharedSecret (hex):', Array.from(secretBytes).map(b => b.toString(16).padStart(2, '0')).join(''));
 
       const myEmail = sessionStorage.getItem('email');
       const salt = [myEmail, contactEmail].sort().join(':');
@@ -101,6 +104,10 @@ function Chat() {
 
       const exportedKey = await exportAESKey(aesKey);
       sessionStorage.setItem(`chatKey_${contactEmail}`, exportedKey);
+      // Debug: log the derived key bytes from the exported base64
+      const keyBytes = Uint8Array.from(atob(exportedKey), c => c.charCodeAt(0));
+      console.log('AES-256 Key (hex):', Array.from(keyBytes).map(b => b.toString(16).padStart(2, '0')).join(''));
+      console.log('Key length (bits):', keyBytes.byteLength * 8);
 
       return aesKey;
     } catch (err) {
