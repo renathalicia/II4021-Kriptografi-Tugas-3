@@ -22,29 +22,24 @@ function Register() {
     setLoading(true);
 
     try {
-      // STEP 1: Generate ECDH keypair
       console.log('Generating ECDH keypair...');
       const keyPair = await generateECDHKeyPair();
 
-      // STEP 2: Export keys
       console.log('Exporting keys...');
       const publicKeyBase64 = await exportPublicKey(keyPair.publicKey);
       const privateKeyBase64 = await exportPrivateKey(keyPair.privateKey);
 
-      // STEP 3: Derive encryption key from password
       console.log('Deriving encryption key...');
       const saltBytes = window.crypto.getRandomValues(new Uint8Array(16));
       const salt = arrayBufferToBase64(saltBytes.buffer);
       const encryptionKey = await deriveKeyFromPassword(password, salt);
 
-      // STEP 4: Encrypt private key
       console.log('Encrypting private key...');
       const { ciphertext: encryptedPrivateKey, iv } = await encryptAES(
         privateKeyBase64,
         encryptionKey
       );
 
-      // STEP 5: Send to server
       console.log('Sending to server...');
       await authAPI.register(
         email,

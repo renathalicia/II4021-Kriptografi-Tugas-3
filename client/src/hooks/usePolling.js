@@ -5,10 +5,8 @@ function usePolling(callback, dependencies = []) {
   const intervalRef = useRef(null);
 
   useEffect(() => {
-    // Start polling
     intervalRef.current = setInterval(callback, POLLING_INTERVAL);
 
-    // Cleanup on unmount
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -16,7 +14,6 @@ function usePolling(callback, dependencies = []) {
     };
   }, dependencies);
 
-  // Return function untuk stop polling manually
   const stopPolling = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);

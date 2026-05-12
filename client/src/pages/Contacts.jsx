@@ -15,13 +15,10 @@ function Contacts() {
   const loadContacts = async () => {
     try {
       setLoading(true);
-      // Panggil endpoint GET /users/contacts
       const result = await usersAPI.getAll();
       
-      // Response backend berbentuk { contacts: ["email1", "email2"] }
       const emailList = result.contacts || [];
       
-      // Format ke dalam bentuk object [{email: '...'}, ...] untuk dirender
       const formattedContacts = emailList.map(email => ({ email }));
       
       setContacts(formattedContacts);
@@ -39,7 +36,6 @@ function Contacts() {
   };
 
   useEffect(() => {
-    // Check if logged in
     const jwt = getJWTFromCookie();
     const privateKey = sessionStorage.getItem(STORAGE_KEYS.PRIVATE_KEY);
     if (!jwt || !privateKey) {

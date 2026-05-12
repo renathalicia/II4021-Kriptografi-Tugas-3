@@ -36,7 +36,6 @@ function Chat() {
     initializeChat();
 
     return () => {
-      // Cleanup polling on unmount
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
@@ -44,15 +43,12 @@ function Chat() {
   }, [contactEmail, navigate]);
 
   useEffect(() => {
-    // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const initializeChat = async () => {
     try {
       setLoading(true);
-
-      // Check if we already have chat key
       const storedKey = sessionStorage.getItem(`chatKey_${contactEmail}`);
 
       if (storedKey) {
@@ -60,20 +56,16 @@ function Chat() {
         const key = await importAESKey(storedKey);
         setChatKey(key);
 
-        // Load message history
         await loadMessages(key);
 
-        // Start polling for new messages
         startMessagePolling(key);
       } else {
         console.log('Performing key exchange...');
         const key = await performKeyExchange();
         setChatKey(key);
 
-        // Load message history
         await loadMessages(key);
 
-        // Start polling for new messages
         startMessagePolling(key);
       }
 
@@ -87,7 +79,6 @@ function Chat() {
 
   const performKeyExchange = async () => {
     try {
-      // Get contact's public key
       const { public_key: contactPublicKeyBase64 } = await usersAPI.getPublicKey(contactEmail);
 
       if (!contactPublicKeyBase64) {
@@ -96,22 +87,18 @@ function Chat() {
 
       const contactPublicKey = await importPublicKey(contactPublicKeyBase64);
 
-      // Get our private key
       const myPrivateKeyBase64 = sessionStorage.getItem('privateKey');
       if (!myPrivateKeyBase64) {
         throw new Error('Private key tidak ditemukan. Silakan login kembali.');
       }
       const myPrivateKey = await importPrivateKey(myPrivateKeyBase64);
 
-      // Compute shared secret
       const sharedSecret = await computeSharedSecret(myPrivateKey, contactPublicKey);
 
-      // Derive AES key
       const myEmail = sessionStorage.getItem('email');
       const salt = [myEmail, contactEmail].sort().join(':');
       const aesKey = await deriveAESKeyFromSharedSecret(sharedSecret, salt);
 
-      // Store for this session
       const exportedKey = await exportAESKey(aesKey);
       sessionStorage.setItem(`chatKey_${contactEmail}`, exportedKey);
 
@@ -135,7 +122,6 @@ function Chat() {
 
       setMessages(decryptedMessages);
 
-      // Update lastMessageIdRef based on loaded messages
       if (decryptedMessages.length > 0) {
         lastMessageIdRef.current = decryptedMessages[decryptedMessages.length - 1].id;
       }
@@ -177,17 +163,13 @@ function Chat() {
     try {
       const myEmail = sessionStorage.getItem('email');
 
-      // Encrypt message
       const { ciphertext, iv } = await encryptAES(plaintext, chatKey);
 
-      // Compute MAC (BONUS)
       const mac = await computeMAC(ciphertext, chatKey);
 
-      // Send to server
       const result = await messagesAPI.send(myEmail, contactEmail, ciphertext, iv, mac);
       const dbMessage = result.data;
 
-      // Add to local messages
       const newMessage = {
         id: dbMessage.id,
         sender_email: myEmail,
@@ -217,9 +199,8 @@ function Chat() {
     const isSent = encryptedMessage.sender_email === myEmail;
 
     try {
-      let macValid = true; // default: anggap valid jika tidak ada MAC
+      let macValid = true; 
 
-      // Verify MAC (BONUS) jika field mac tersedia
       if (encryptedMessage.mac) {
         const isValid = await verifyMAC(
           encryptedMessage.ciphertext,
@@ -238,7 +219,6 @@ function Chat() {
         }
       }
 
-      // Decrypt message
       const plaintext = await decryptAES(
         encryptedMessage.ciphertext,
         encryptedMessage.iv,

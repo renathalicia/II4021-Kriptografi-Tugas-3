@@ -1,9 +1,5 @@
 import { API_BASE_URL, JWT_COOKIE_NAME, JWT_MAX_AGE } from '../utils/constants';
 
-// ============================================
-// JWT Cookie Management
-// ============================================
-
 export function getJWTFromCookie() {
   const cookies = document.cookie.split(';');
   for (let cookie of cookies) {
@@ -20,10 +16,6 @@ export function setJWTCookie(jwt, maxAge = JWT_MAX_AGE) {
 export function clearJWTCookie() {
   document.cookie = `${JWT_COOKIE_NAME}=; max-age=0; path=/`;
 }
-
-// ============================================
-// Generic Fetch dengan Auth
-// ============================================
 
 async function fetchWithAuth(endpoint, options = {}) {
   const jwt = getJWTFromCookie();
@@ -49,10 +41,6 @@ async function fetchWithAuth(endpoint, options = {}) {
   
   return response.json();
 }
-
-// ============================================
-// Auth API
-// ============================================
 
 export const authAPI = {
   // Register user baru
@@ -99,10 +87,6 @@ export const authAPI = {
   }
 };
 
-// ============================================
-// Users API
-// ============================================
-
 export const usersAPI = {
   // Get all users (untuk daftar kontak)
   async getAll() {
@@ -115,14 +99,8 @@ export const usersAPI = {
   }
 };
 
-// ============================================
-// Messages API
-// ============================================
-
 export const messagesAPI = {
-  // Kirim pesan baru
   async send(senderEmail, receiverEmail, ciphertext, iv, mac) {
-    // senderEmail dan timestamp di-handle oleh server dari JWT dan DB
     return fetchWithAuth('/messages', {
       method: 'POST',
       body: JSON.stringify({
@@ -134,9 +112,7 @@ export const messagesAPI = {
     });
   },
 
-  // Get message history
   async getHistory(user1, user2) {
-    // Lawan bicara yang akan difilter dari server (dengan asumsi user1 atau user2 adalah current user)
     const currentEmail = sessionStorage.getItem('email');
     const lawanBicara = user1 === currentEmail ? user2 : user1;
     
@@ -145,7 +121,6 @@ export const messagesAPI = {
     );
   },
 
-  // Get new messages setelah message ID tertentu
   async getNew(user1, user2, afterId) {
     const currentEmail = sessionStorage.getItem('email');
     const lawanBicara = user1 === currentEmail ? user2 : user1;

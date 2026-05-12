@@ -9,7 +9,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check authentication status on mount
   useEffect(() => {
     checkAuth();
   }, []);
@@ -64,7 +63,7 @@ export function AuthProvider({ children }) {
   );
 }
 
-// Custom hook untuk pakai auth context
+//custom hook untuk pakai auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

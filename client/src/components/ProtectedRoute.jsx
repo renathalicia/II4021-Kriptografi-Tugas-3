@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
 
-  // Show loading state
   if (loading) {
     return (
       <div style={{ 
@@ -19,12 +18,10 @@ function ProtectedRoute({ children }) {
     );
   }
 
-  // Redirect ke login jika tidak authenticated
+  //kembali ke login jika tidak authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
-  // Render children jika authenticated
   return children;
 }
 

@@ -15,7 +15,6 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Check if already logged in
   useEffect(() => {
     const jwt = getJWTFromCookie();
     const privateKey = sessionStorage.getItem('privateKey');
@@ -30,7 +29,6 @@ function Login() {
     setLoading(true);
 
     try {
-      // STEP 1: Authenticate with server
       console.log('Authenticating...');
       const result = await authAPI.login(email, password);
 
@@ -42,13 +40,9 @@ function Login() {
         publicKey
       } = result;
 
-      // JWT already saved to cookie by authAPI.login()
-
-      // STEP 2: Derive encryption key
       console.log('Deriving encryption key...');
       const encryptionKey = await deriveKeyFromPassword(password, salt);
 
-      // STEP 3: Decrypt private key
       console.log('Decrypting private key...');
       const privateKeyBase64 = await decryptAES(
         encryptedPrivateKey,
@@ -56,14 +50,11 @@ function Login() {
         encryptionKey
       );
 
-      // STEP 4: Import private key to verify
       await importPrivateKey(privateKeyBase64);
 
-      // STEP 5: Store in context & session storage
       console.log('Storing keys in session...');
       loginContext(email, privateKeyBase64, publicKey);
 
-      // Navigate to contacts
       navigate('/contacts');
 
     } catch (err) {

@@ -1,5 +1,4 @@
 function MessageBubble({ message, isSent }) {
-  // Tentukan status icon
   let statusIcon = '';
   if (!message.decryptionSuccess) {
     statusIcon = '❌ ';
@@ -7,7 +6,7 @@ function MessageBubble({ message, isSent }) {
     statusIcon = '⚠️ ';
   }
 
-  // Format timestamp
+  //timestamp
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString('id-ID', {
       hour: '2-digit',
